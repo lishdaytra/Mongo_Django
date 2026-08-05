@@ -31,13 +31,12 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'config.apps.MongoAdminConfig',
-    'config.apps.MongoAuthConfig',
-    'config.apps.MongoContentTypesConfig',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django_mongodb_backend',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
 ]
 
 MIDDLEWARE = [
@@ -74,16 +73,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django_mongodb_backend',
-        'HOST': 'mongodb://localhost:27017/',
-        'NAME': 'config',
-    },
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
 }
 
-# Database routers
-# https://docs.djangoproject.com/en/dev/ref/settings/#database-routers
-DATABASE_ROUTERS = ["django_mongodb_backend.routers.MongoRouter"]
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -109,7 +104,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -124,10 +119,5 @@ STATIC_URL = 'static/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django_mongodb_backend.fields.ObjectIdAutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MIGRATION_MODULES = {
-    'admin': 'mongo_migrations.admin',
-    'auth': 'mongo_migrations.auth',
-    'contenttypes': 'mongo_migrations.contenttypes',
-}
