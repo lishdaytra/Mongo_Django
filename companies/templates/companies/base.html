@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <title>
+        {% block title %}Titan Web{% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'companies/style.css' %}"
+    >
+</head>
+
+<body>
+    <header class="header">
+        <div class="container header__content">
+            <a class="logo" href="/">Titan Web</a>
+
+            {% if user.is_authenticated %}
+                <div class="user-panel">
+                    <span>{{ user.username }}</span>
+
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button class="button button--secondary">
+                            Выйти
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="container main">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

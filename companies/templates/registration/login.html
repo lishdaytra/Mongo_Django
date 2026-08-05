@@ -1,0 +1,41 @@
+{% extends "companies/base.html" %}
+
+{% block title %}Вход — Titan Web{% endblock %}
+
+{% block content %}
+<section class="login-card">
+    <h1>Вход в Titan Web</h1>
+
+    {% if form.errors %}
+        <div class="message message--error">
+            Неверное имя пользователя или пароль.
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-field">
+            <label for="{{ form.username.id_for_label }}">
+                Имя пользователя
+            </label>
+            {{ form.username }}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.password.id_for_label }}">
+                Пароль
+            </label>
+            {{ form.password }}
+        </div>
+
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <button class="button" type="submit">
+            Войти
+        </button>
+    </form>
+</section>
+{% endblock %}

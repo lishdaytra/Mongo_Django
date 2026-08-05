@@ -1,0 +1,65 @@
+{% extends "companies/base.html" %}
+
+{% block title %}Компании — Titan Web{% endblock %}
+
+{% block content %}
+<h1>Доступные компании</h1>
+
+{% if mongo_error %}
+    <div class="message message--error">
+        {{ mongo_error }}
+    </div>
+{% elif mongo_available %}
+    <div class="message message--success">
+        Соединение с TitanRetail установлено.
+    </div>
+{% endif %}
+
+{% if companies %}
+    <div class="company-grid">
+        {% for item in companies %}
+            <article class="company-card">
+                <h2>
+                    {% if item.access.company_name %}
+                        {{ item.access.company_name }}
+                    {% else %}
+                        Компания {{ item.access.company_id }}
+                    {% endif %}
+                </h2>
+
+                <p class="company-id">
+                    ID: {{ item.access.company_id }}
+                </p>
+
+                <div class="collection-list">
+                    {% for collection in item.collections %}
+                        <div class="collection-row">
+                            <div>
+                                <strong>{{ collection.label }}</strong>
+                                <div class="collection-name">
+                                    {{ collection.name }}
+                                </div>
+                            </div>
+
+                            {% if collection.exists %}
+                                <span class="status status--ok">
+                                    Найдена
+                                </span>
+                            {% else %}
+                                <span class="status status--missing">
+                                    Не найдена
+                                </span>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="message">
+        Для вашей учётной записи пока не назначено
+        ни одной компании.
+    </div>
+{% endif %}
+{% endblock %}

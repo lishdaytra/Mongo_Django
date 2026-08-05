@@ -1,0 +1,165 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #f4f6f8;
+    color: #20242a;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    width: min(1120px, calc(100% - 32px));
+    margin: 0 auto;
+}
+
+.header {
+    background: #20242a;
+    color: #ffffff;
+}
+
+.header__content {
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.logo {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.user-panel {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.main {
+    padding-top: 32px;
+    padding-bottom: 48px;
+}
+
+.company-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(320px, 1fr)
+    );
+    gap: 20px;
+}
+
+.company-card,
+.login-card {
+    background: #ffffff;
+    border: 1px solid #dfe3e8;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.login-card {
+    max-width: 420px;
+    margin: 48px auto;
+}
+
+.company-card h2,
+.login-card h1 {
+    margin-top: 0;
+}
+
+.company-id,
+.collection-name {
+    color: #69727d;
+    font-size: 14px;
+}
+
+.collection-name {
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+}
+
+.collection-list {
+    margin-top: 20px;
+}
+
+.collection-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-top: 1px solid #edf0f2;
+}
+
+.status {
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.status--ok {
+    background: #e5f6ea;
+    color: #176b35;
+}
+
+.status--missing {
+    background: #fde8e8;
+    color: #a32424;
+}
+
+.message {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: #e9edf2;
+}
+
+.message--success {
+    background: #e5f6ea;
+    color: #176b35;
+}
+
+.message--error {
+    background: #fde8e8;
+    color: #a32424;
+}
+
+.form-field {
+    margin-bottom: 18px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 600;
+}
+
+.form-field input {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid #bdc5ce;
+    border-radius: 7px;
+    padding: 8px 10px;
+    font: inherit;
+}
+
+.button {
+    border: 0;
+    border-radius: 7px;
+    background: #2457d6;
+    color: #ffffff;
+    padding: 10px 16px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.button--secondary {
+    background: #454d57;
+}
