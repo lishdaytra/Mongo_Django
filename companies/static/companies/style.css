@@ -163,3 +163,127 @@ body {
 .button--secondary {
     background: #454d57;
 }
+
+.company-card__button {
+    display: inline-block;
+    margin-top: 20px;
+    text-decoration: none;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.page-header h1 {
+    margin-bottom: 8px;
+}
+
+.page-description {
+    margin: 0;
+    color: #69727d;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: #2457d6;
+    text-decoration: none;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.search-form input {
+    width: min(520px, 100%);
+    min-height: 42px;
+    border: 1px solid #bdc5ce;
+    border-radius: 7px;
+    padding: 8px 12px;
+    font: inherit;
+}
+
+.search-form a {
+    text-decoration: none;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    background: #ffffff;
+    border: 1px solid #dfe3e8;
+    border-radius: 12px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 13px 14px;
+    border-bottom: 1px solid #edf0f2;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.data-table th {
+    background: #f7f8fa;
+    color: #4c5560;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.data-table tbody tr:hover {
+    background: #fafbfc;
+}
+
+.table-note {
+    margin-top: 4px;
+    color: #69727d;
+    font-size: 13px;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.pagination__buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.pagination a {
+    text-decoration: none;
+}
+
+@media (max-width: 700px) {
+    .search-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .search-form input {
+        width: 100%;
+    }
+
+    .pagination {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .pagination__buttons {
+        flex-wrap: wrap;
+    }
+}

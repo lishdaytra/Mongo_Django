@@ -1,0 +1,162 @@
+{% extends "companies/base.html" %}
+
+{% block title %}
+    Товары — {{ access.company_name }}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a
+            class="back-link"
+            href="{% url 'companies:dashboard' %}"
+        >
+            ← Назад к компаниям
+        </a>
+
+        <h1>
+            Товары:
+            {% if access.company_name %}
+                {{ access.company_name }}
+            {% else %}
+                {{ access.company_id }}
+            {% endif %}
+        </h1>
+
+        <p class="page-description">
+            Найдено товаров: {{ total_count }}
+        </p>
+    </div>
+</div>
+
+<form
+    class="search-form"
+    method="get"
+>
+    <input
+        type="search"
+        name="q"
+        value="{{ query }}"
+        placeholder="Название, штрихкод или артикул"
+    >
+
+    <button
+        class="button"
+        type="submit"
+    >
+        Найти
+    </button>
+
+    {% if query %}
+        <a
+            class="button button--secondary"
+            href="{% url 'companies:goods' access.company_id %}"
+        >
+            Сбросить
+        </a>
+    {% endif %}
+</form>
+
+{% if mongo_error %}
+    <div class="message message--error">
+        {{ mongo_error }}
+    </div>
+{% elif goods %}
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Штрихкод</th>
+                    <th>Артикул</th>
+                    <th>Цена</th>
+                    <th>Ед. изм.</th>
+                    <th>НДС</th>
+                    <th>Скидка</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for good in goods %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ good.Name|default:"Без названия" }}
+                            </strong>
+
+                            {% if good.Manufacturer %}
+                                <div class="table-note">
+                                    {{ good.Manufacturer }}
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ good.Barcode|default:"—" }}
+                        </td>
+
+                        <td>
+                            {{ good.VendorCode|default:"—" }}
+                        </td>
+
+                        <td>
+                            {{ good.Price|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            {{ good.Measure|default:"—" }}
+                        </td>
+
+                        <td>
+                            {{ good.VATrate|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            {% if good.Deleted %}
+                                <span class="status status--ok">
+                                    Да
+                                </span>
+                            {% else %}
+                                <span class="status status--missing">
+                                    Нет
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <nav class="pagination">
+        <div>
+            Страница {{ page_number }}
+            из {{ page_count }}
+        </div>
+
+        <div class="pagination__buttons">
+            {% if has_previous %}
+                <a
+                    class="button button--secondary"
+                    href="?q={{ query|urlencode }}&page={{ previous_page }}"
+                >
+                    ← Предыдущая
+                </a>
+            {% endif %}
+
+            {% if has_next %}
+                <a
+                    class="button button--secondary"
+                    href="?q={{ query|urlencode }}&page={{ next_page }}"
+                >
+                    Следующая →
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+{% else %}
+    <div class="message">
+        Товары не найдены.
+    </div>
+{% endif %}
+{% endblock %}

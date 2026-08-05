@@ -62,3 +62,20 @@ def get_collection_name(
     separator = settings.MONGO_COLLECTION_SEPARATOR
 
     return f"{clean_company_id}{separator}{suffix}"
+
+from pymongo.collection import Collection
+
+
+def get_company_collection(
+    company_id: str,
+    suffix: str,
+) -> Collection:
+    """Возвращает коллекцию конкретной компании."""
+
+    database = get_titan_database()
+    collection_name = get_collection_name(
+        company_id,
+        suffix,
+    )
+
+    return database[collection_name]

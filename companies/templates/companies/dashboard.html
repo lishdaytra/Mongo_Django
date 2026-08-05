@@ -53,6 +53,12 @@
                         </div>
                     {% endfor %}
                 </div>
+                <a
+                    class="button company-card__button"
+                    href="{% url 'companies:goods' item.access.company_id %}"
+                >
+                    Открыть товары
+                </a>
             </article>
         {% endfor %}
     </div>
