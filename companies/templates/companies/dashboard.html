@@ -1,71 +1,84 @@
 {% extends "companies/base.html" %}
 
-{% block title %}Компании — Titan Web{% endblock %}
+{% block title %}
+    Подключение — Titan Web
+{% endblock %}
 
 {% block content %}
-<h1>Доступные компании</h1>
+<section class="connection-card">
+    <h1>Подключение к TitanRetail</h1>
 
-{% if mongo_error %}
-    <div class="message message--error">
-        {{ mongo_error }}
-    </div>
-{% elif mongo_available %}
-    <div class="message message--success">
-        Соединение с TitanRetail установлено.
-    </div>
-{% endif %}
+    <p class="page-description">
+        Выберите режим работы и укажите ID компании.
+        База RetailServer будет определена автоматически.
+    </p>
 
-{% if companies %}
-    <div class="company-grid">
-        {% for item in companies %}
-            <article class="company-card">
-                <h2>
-                    {% if item.access.company_name %}
-                        {{ item.access.company_name }}
-                    {% else %}
-                        Компания {{ item.access.company_id }}
+    {% if error %}
+        <div class="message message--error">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="post" class="connection-form">
+        {% csrf_token %}
+
+        <div class="form-field">
+            <label for="mode">
+                Источник данных
+            </label>
+
+            <select id="mode" name="mode">
+                <option
+                    value="retail"
+                    {% if selected_mode == "retail" %}
+                        selected
                     {% endif %}
-                </h2>
-
-                <p class="company-id">
-                    ID: {{ item.access.company_id }}
-                </p>
-
-                <div class="collection-list">
-                    {% for collection in item.collections %}
-                        <div class="collection-row">
-                            <div>
-                                <strong>{{ collection.label }}</strong>
-                                <div class="collection-name">
-                                    {{ collection.name }}
-                                </div>
-                            </div>
-
-                            {% if collection.exists %}
-                                <span class="status status--ok">
-                                    Найдена
-                                </span>
-                            {% else %}
-                                <span class="status status--missing">
-                                    Не найдена
-                                </span>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-                <a
-                    class="button company-card__button"
-                    href="{% url 'companies:goods' item.access.company_id %}"
                 >
-                    Открыть товары
-                </a>
-            </article>
-        {% endfor %}
+                    RetailServer
+                </option>
+
+                <option
+                    value="cash"
+                    {% if selected_mode == "cash" %}
+                        selected
+                    {% endif %}
+                >
+                    Локальный CashServer
+                </option>
+            </select>
+        </div>
+
+        <div class="form-field">
+            <label for="company_id">
+                ID компании
+            </label>
+
+            <input
+                id="company_id"
+                type="text"
+                name="company_id"
+                value="{{ company_id }}"
+                placeholder="Например: vial_1"
+                required
+                autofocus
+            >
+        </div>
+
+        <button class="button" type="submit">
+            Подключиться
+        </button>
+    </form>
+
+    <div class="connection-hint">
+        <strong>Автоматический выбор базы:</strong>
+
+        <p>
+            ID с 1 по 9 в начале направляется
+            в RetailServer1–RetailServer9.
+            Остальные ID — в RetailServer.</br>
+            При подключении к CashServer -
+            любой ID
+        </p>
     </div>
-{% else %}
-    <div class="message">
-        Для вашей учётной записи пока не назначено
-        ни одной компании.
-    </div>
-{% endif %}
+</section>
 {% endblock %}

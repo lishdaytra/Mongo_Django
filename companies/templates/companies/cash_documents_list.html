@@ -1,0 +1,284 @@
+{% extends "companies/base.html" %}
+
+{% block title %}
+    Кассовые документы — {{ access.company_name }}
+{% endblock %}
+
+{% block content %}
+<a
+    class="back-link"
+    href="{% url 'companies:company_dashboard' access.mode access.company_id %}"
+>
+    ← Назад к компаниям
+</a>
+
+<h1>
+    Кассовые документы:
+    {{ access.company_name|default:access.company_id }}
+</h1>
+
+<p class="page-description">
+    Найдено документов: {{ total_count }}
+</p>
+
+
+<form class="filters" method="get">
+
+    
+
+    <div class="form-field">
+        <label for="date_from">Дата от</label>
+        <input
+            id="date_from"
+            type="date"
+            name="date_from"
+            value="{{ date_from }}"
+        >
+    </div>
+
+    <div class="form-field">
+        <label for="date_to">Дата до</label>
+        <input
+            id="date_to"
+            type="date"
+            name="date_to"
+            value="{{ date_to }}"
+        >
+    </div>
+
+    <div class="form-field">
+        <label for="number">Номер</label>
+        <input
+            id="number"
+            type="text"
+            name="number"
+            value="{{ number }}"
+        >
+    </div>
+
+    <div class="form-field">
+        <label for="cashier">Кассир</label>
+        <input
+            id="cashier"
+            type="text"
+            name="cashier"
+            value="{{ cashier }}"
+        >
+    </div>
+
+    <div class="form-field">
+        <label for="serial_id">Серийный номер</label>
+        <input
+            id="serial_id"
+            type="text"
+            name="serial_id"
+            value="{{ serial_id }}"
+        >
+    </div>
+
+    <div class="form-field">
+        <label for="type">Тип документа</label>
+        <select id="type" name="type">
+            <option value="">Все типы</option>
+
+            <option
+                value="Check"
+                {% if selected_type == "Check" %}selected{% endif %}
+            >
+                Кассовые чеки
+            </option>
+
+            <option
+                value="CashShift"
+                {% if selected_type == "CashShift" %}selected{% endif %}
+            >
+                Z-отчёты
+            </option>
+
+            <option
+                value="MoneyOrder"
+                {% if selected_type == "MoneyOrder" %}selected{% endif %}
+            >
+                Внесения и изъятия
+            </option>
+
+            <option
+                value="IssuingCash"
+                {% if selected_type == "IssuingCash" %}selected{% endif %}
+            >
+                Выдача
+            </option>
+
+            <option
+                value="Cancellation"
+                {% if selected_type == "Cancellation" %}selected{% endif %}
+            >
+                Аннулирования
+            </option>
+        </select>
+    </div>
+
+    <div class="form-field">
+        <label for="operation">Операция</label>
+        <select id="operation" name="operation">
+            <option value="">Все операции</option>
+
+            <option
+                value="sale"
+                {% if selected_operation == "sale" %}selected{% endif %}
+            >
+                Продажи
+            </option>
+
+            <option
+                value="refund"
+                {% if selected_operation == "refund" %}selected{% endif %}
+            >
+                Возвраты
+            </option>
+        </select>
+    </div>
+
+
+    <div class="filters__buttons">
+        <button class="button" type="submit">
+            Применить
+        </button>
+
+        <a
+            class="button button--secondary"
+            href="{% url 'companies:cash_documents' access.mode access.company_id %}"
+        >
+            Сбросить
+        </a>
+    </div>
+
+
+</form>
+
+<div class="form-field form-field--checkbox">
+    <label class="checkbox-field">
+        <input
+            type="checkbox"
+            name="show_deleted"
+            value="1"
+            {% if show_deleted %}checked{% endif %}
+        >
+
+        <span>Показывать удалённые</span>
+    </label>
+</div>    
+
+{% if mongo_error %}
+    <div class="message message--error">
+        {{ mongo_error }}
+    </div>
+
+{% elif documents %}
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Дата закрытия</th>
+                    <th>Номер</th>
+                    <th>Тип</th>
+                    <th>Кассир</th>
+                    <th>Касса</th>
+                    <th>Наличные</th>
+                    <th>Безналичные</th>
+                    <th>Прочие</th>
+                    <th>Скидка</th>
+                    <th>Итого</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in documents %}
+                    <tr>
+                        <td>{{ item.position }}</td>
+
+                        <td>
+                            {% if item.id %}
+                                <a
+                                    class="table-link"
+                                    href="{% url 'companies:cash_document_detail' access.mode access.company_id item.id %}"
+                                >
+                                    {{ item.number }}
+                                </a>
+                            {% else %}
+                                {{ item.number }}
+                            {% endif %}
+
+                            {% if item.deleted %}
+                                <div>
+                                    <span class="status status--deleted">
+                                        Удалён
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ item.type_label }}</td>
+                        <td>{{ item.cashier }}</td>
+                        <td>{{ item.serial_id }}</td>
+
+                        <td>
+                            {{ item.payments.cash|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            {{ item.payments.cashless|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            {{ item.payments.other|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            {{ item.discount_sum|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ item.total_sum|floatformat:2 }}
+                            </strong>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <nav class="pagination">
+        <div>
+            Страница {{ page_number }}
+            из {{ page_count }}
+        </div>
+
+        <div class="pagination__buttons">
+            {% if has_previous %}
+                <a
+                    class="button button--secondary"
+                    href="?{{ pagination_query }}{% if pagination_query %}&{% endif %}page={{ previous_page }}"
+                >
+                    ← Предыдущая
+                </a>
+            {% endif %}
+
+            {% if has_next %}
+                <a
+                    class="button button--secondary"
+                    href="?{{ pagination_query }}{% if pagination_query %}&{% endif %}page={{ next_page }}"
+                >
+                    Следующая →
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+
+{% else %}
+    <div class="message">
+        Документы по выбранным условиям не найдены.
+    </div>
+{% endif %}
+{% endblock %}

@@ -21,19 +21,12 @@
     <header class="header">
         <div class="container header__content">
             <a class="logo" href="/">Titan Web</a>
-
-            {% if user.is_authenticated %}
-                <div class="user-panel">
-                    <span>{{ user.username }}</span>
-
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button class="button button--secondary">
-                            Выйти
-                        </button>
-                    </form>
-                </div>
-            {% endif %}
+            <a
+                class="button button--secondary"
+                href="{% url 'companies:dashboard' %}"
+            >
+                Подключение
+            </a>
         </div>
     </header>
 

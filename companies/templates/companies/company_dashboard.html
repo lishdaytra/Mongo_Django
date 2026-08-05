@@ -1,0 +1,90 @@
+{% extends "companies/base.html" %}
+
+{% block title %}
+    {{ access.company_id }} — Titan Web
+{% endblock %}
+
+{% block content %}
+<a
+    class="back-link"
+    href="{% url 'companies:dashboard' %}"
+>
+    ← Другое подключение
+</a>
+
+<h1>Компания {{ access.company_id }}</h1>
+
+<div class="connection-info">
+    <div>
+        <span>Режим</span>
+        <strong>{{ access.mode_label }}</strong>
+    </div>
+
+    <div>
+        <span>База данных</span>
+        <strong>{{ access.database_name }}</strong>
+    </div>
+
+    <div>
+        <span>ID компании</span>
+        <strong>{{ access.company_id }}</strong>
+    </div>
+</div>
+
+{% if mongo_error %}
+    <div class="message message--error">
+        {{ mongo_error }}
+    </div>
+
+{% elif mongo_available %}
+    <div class="message message--success">
+        Соединение с MongoDB установлено.
+    </div>
+{% endif %}
+
+{% if collections %}
+    <article class="company-card">
+        <div class="collection-list">
+            {% for collection in collections %}
+                <div class="collection-row">
+                    <div>
+                        <strong>
+                            {{ collection.label }}
+                        </strong>
+
+                        <div class="collection-name">
+                            {{ collection.name }}
+                        </div>
+                    </div>
+
+                    {% if collection.exists %}
+                        <span class="status status--ok">
+                            Найдена
+                        </span>
+                    {% else %}
+                        <span class="status status--missing">
+                            Не найдена
+                        </span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="company-actions">
+            <a
+                class="button"
+                href="{% url 'companies:goods' access.mode access.company_id %}"
+            >
+                Товары
+            </a>
+
+            <a
+                class="button button--secondary"
+                href="{% url 'companies:cash_documents' access.mode access.company_id %}"
+            >
+                Кассовые документы
+            </a>
+        </div>
+    </article>
+{% endif %}
+{% endblock %}

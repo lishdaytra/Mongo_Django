@@ -1,0 +1,182 @@
+{% extends "companies/base.html" %}
+
+{% block title %}
+    Документ № {{ document.number }}
+{% endblock %}
+
+{% block content %}
+<a
+    class="back-link"
+    href="{% url 'companies:cash_documents' access.mode access.company_id %}"
+>
+    ← Назад к документам
+</a>
+
+<h1>
+    {{ document.type_label }}
+    № {{ document.number }}
+</h1>
+{% if document.deleted %}
+    <div class="message message--warning">
+        Этот кассовый документ помечен как удалённый.
+    </div>
+{% endif %}
+<div class="connection-info">
+    <div>
+        <span>Режим</span>
+        <strong>{{ access.mode_label }}</strong>
+    </div>
+
+    <div>
+        <span>База данных</span>
+        <strong>{{ access.database_name }}</strong>
+    </div>
+
+    <div>
+        <span>ID компании</span>
+        <strong>{{ access.company_id }}</strong>
+    </div>
+</div>
+
+<div class="document-summary">
+    <div>
+        <span>Открыт</span>
+        <strong>{{ document.created_at }}</strong>
+    </div>
+
+    <div>
+        <span>Закрыт</span>
+        <strong>{{ document.position }}</strong>
+    </div>
+
+    <div>
+        <span>Кассир</span>
+        <strong>{{ document.cashier }}</strong>
+    </div>
+
+    <div>
+        <span>Касса</span>
+        <strong>{{ document.serial_id }}</strong>
+    </div>
+
+    <div>
+        <span>Скидка</span>
+        <strong>
+            {{ document.discount_sum|floatformat:2 }}
+            {{ document.currency }}
+        </strong>
+    </div>
+
+    <div>
+        <span>Итого</span>
+        <strong>
+            {{ document.total_sum|floatformat:2 }}
+            {{ document.currency }}
+        </strong>
+    </div>
+</div>
+
+<h2>Товары</h2>
+
+{% if lines %}
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Штрихкод</th>
+                    <th>Количество</th>
+                    <th>Цена</th>
+                    <th>Скидка</th>
+                    <th>Налог</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for line in lines %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ line.name }}
+                            </strong>
+
+                            {% if line.vendor_code %}
+                                <div class="table-note">
+                                    Артикул:
+                                    {{ line.vendor_code }}
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ line.barcode }}
+                        </td>
+
+                        <td>
+                            {{ line.quantity|floatformat:-3 }}
+                            {{ line.measure }}
+                        </td>
+
+                        <td>
+                            {{ line.price|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            {{ line.discount_sum|floatformat:2 }}
+
+                            {% if line.discount_label %}
+                                <div class="table-note">
+                                    {{ line.discount_label }}
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ line.tax }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ line.total_sum|floatformat:2 }}
+                            </strong>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="message">
+        В документе нет товарных строк.
+    </div>
+{% endif %}
+
+<h2>Оплата</h2>
+
+{% if payments %}
+    <div class="payments-list">
+        {% for payment in payments %}
+            <div class="payment-row">
+                <span>
+                    {{ payment.type }}
+                </span>
+
+                <strong>
+                    {{ payment.sum|floatformat:2 }}
+                    {{ document.currency }}
+                </strong>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="message">
+        Информация об оплате отсутствует.
+    </div>
+{% endif %}
+
+<div class="document-technical">
+    <strong>УИД документа:</strong>
+    {{ document.signature }}
+</div>
+{% endblock %}

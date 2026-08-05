@@ -9,7 +9,7 @@
     <div>
         <a
             class="back-link"
-            href="{% url 'companies:dashboard' %}"
+            href="{% url 'companies:company_dashboard' access.mode access.company_id %}"
         >
             ← Назад к компаниям
         </a>
@@ -39,7 +39,16 @@
         value="{{ query }}"
         placeholder="Название, штрихкод или артикул"
     >
+    <label class="checkbox-field">
+        <input
+            type="checkbox"
+            name="show_deleted"
+            value="1"
+            {% if show_deleted %}checked{% endif %}
+        >
 
+        <span>Показывать удалённые</span>
+    </label>
     <button
         class="button"
         type="submit"
@@ -50,7 +59,7 @@
     {% if query %}
         <a
             class="button button--secondary"
-            href="{% url 'companies:goods' access.company_id %}"
+            href="{% url 'companies:goods' access.mode access.company_id %}"
         >
             Сбросить
         </a>
@@ -84,6 +93,12 @@
                                 {{ good.Name|default:"Без названия" }}
                             </strong>
 
+                            {% if good.Deleted %}
+                                <span class="status status--deleted">
+                                    Удалён
+                                </span>
+                            {% endif %}                             
+                            
                             {% if good.Manufacturer %}
                                 <div class="table-note">
                                     {{ good.Manufacturer }}
@@ -112,7 +127,7 @@
                         </td>
 
                         <td>
-                            {% if good.Deleted %}
+                            {% if good.Sale %}
                                 <span class="status status--ok">
                                     Да
                                 </span>
@@ -138,7 +153,7 @@
             {% if has_previous %}
                 <a
                     class="button button--secondary"
-                    href="?q={{ query|urlencode }}&page={{ previous_page }}"
+                    href="?q={{ query|urlencode }}{% if show_deleted %}&show_deleted=1{% endif %}&page={{ previous_page }}"
                 >
                     ← Предыдущая
                 </a>
@@ -147,7 +162,7 @@
             {% if has_next %}
                 <a
                     class="button button--secondary"
-                    href="?q={{ query|urlencode }}&page={{ next_page }}"
+                   href="?q={{ query|urlencode }}{% if show_deleted %}&show_deleted=1{% endif %}&page={{ next_page }}"
                 >
                     Следующая →
                 </a>

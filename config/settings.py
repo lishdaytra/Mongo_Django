@@ -137,6 +137,33 @@ MONGO_COLLECTION_SEPARATOR = os.getenv(
     "",
 )
 
+"""
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "companies:dashboard"
 LOGOUT_REDIRECT_URL = "login"
+"""
+
+RETAIL_MONGO_URI = os.getenv(
+    "RETAIL_MONGO_URI",
+    "",
+)
+
+CASH_MONGO_URI = os.getenv(
+    "CASH_MONGO_URI",
+    "mongodb://127.0.0.1:27017/",
+)
+
+RETAIL_DB_PREFIX = os.getenv(
+    "RETAIL_DB_PREFIX",
+    "RetailServer",
+)
+
+CASH_DB_NAME = os.getenv(
+    "CASH_DB_NAME",
+    "CashServer",
+)
+
+MONGO_COLLECTION_SEPARATOR = os.getenv(
+    "MONGO_COLLECTION_SEPARATOR",
+    "",
+)
