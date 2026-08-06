@@ -11,7 +11,9 @@ from datetime import datetime
 
 
 from .services.mongo import (
+    CompanyCollectionNotFoundError,
     clean_company_id,
+    ensure_primary_collection_exists,
     get_collection_name,
     get_company_collection,
     get_titan_database,
@@ -32,19 +34,45 @@ def get_connection_context(
     company_id: str,
 ) -> dict:
     """
-    Проверяет параметры адреса и возвращает
-    информацию о подключении для шаблонов.
+    Проверяет режим, ID компании, имя базы
+    и наличие основной коллекции Goods.
     """
 
     try:
-        clean_id = clean_company_id(company_id)
+        clean_id = clean_company_id(
+            company_id
+        )
+
         database_name = resolve_database_name(
             mode,
             clean_id,
         )
 
+        primary_collection_name = (
+            ensure_primary_collection_exists(
+                mode,
+                clean_id,
+            )
+        )
+
     except ValueError as error:
-        raise Http404(str(error)) from error
+        raise Http404(
+            str(error)
+        ) from error
+
+    except CompanyCollectionNotFoundError as error:
+        raise Http404(
+            str(error)
+        ) from error
+
+    except PyMongoError as error:
+        logger.exception(
+            "Ошибка подключения к MongoDB."
+        )
+
+        raise Http404(
+            "Не удалось подключиться к MongoDB."
+        ) from error
 
     return {
         "mode": mode,
@@ -53,13 +81,13 @@ def get_connection_context(
             mode,
         ),
         "company_id": clean_id,
-
-        # Оставляем это поле для совместимости
-        # с уже созданными шаблонами.
         "company_name": clean_id,
-
         "database_name": database_name,
+        "primary_collection_name": (
+            primary_collection_name
+        ),
     }
+
 
 DOCUMENT_TYPE_LABELS = {
     "Check": "Кассовый чек",
@@ -170,15 +198,37 @@ def dashboard(request):
 
     if request.method == "POST":
         try:
-            clean_id = clean_company_id(company_id)
+            clean_id = clean_company_id(
+                company_id
+            )
 
             resolve_database_name(
                 selected_mode,
                 clean_id,
             )
 
+            # До перехода проверяем, что существует
+            # основная коллекция Goods.
+            ensure_primary_collection_exists(
+                selected_mode,
+                clean_id,
+            )
+
         except ValueError as validation_error:
             error = str(validation_error)
+
+        except CompanyCollectionNotFoundError as not_found_error:
+            error = str(not_found_error)
+
+        except PyMongoError:
+            logger.exception(
+                "Ошибка проверки компании в MongoDB."
+            )
+
+            error = (
+                "Не удалось подключиться к MongoDB. "
+                "Проверьте адрес сервера и доступность базы."
+            )
 
         else:
             return redirect(
@@ -196,6 +246,7 @@ def dashboard(request):
             "company_id": company_id,
         },
     )
+
 
 def company_dashboard(
     request,

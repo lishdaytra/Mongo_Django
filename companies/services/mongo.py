@@ -15,6 +15,8 @@ ALLOWED_COLLECTION_SUFFIXES = frozenset(
         "CashDocuments",
     }
 )
+class CompanyCollectionNotFoundError(LookupError):
+    """Основная коллекция компании не найдена."""
 
 ALLOWED_MODES = frozenset(
     {
@@ -180,6 +182,50 @@ def get_collection_name(
 
     return f"{clean_value}{separator}{suffix}"
 
+def ensure_primary_collection_exists(
+    mode: str,
+    company_id: str,
+) -> str:
+    """
+    Проверяет наличие основной коллекции товаров.
+
+    RetailServer:
+        {company_id}Goods
+
+    CashServer:
+        Goods
+
+    Возвращает имя найденной коллекции.
+    Если коллекции нет — вызывает исключение.
+    """
+
+    clean_mode = validate_mode(mode)
+    clean_id = clean_company_id(company_id)
+
+    database = get_titan_database(
+        clean_mode,
+        clean_id,
+    )
+
+    primary_collection_name = get_collection_name(
+        clean_id,
+        "Goods",
+        mode=clean_mode,
+    )
+
+    existing_collections = set(
+        database.list_collection_names()
+    )
+
+    if primary_collection_name not in existing_collections:
+        raise CompanyCollectionNotFoundError(
+            "Компания не найдена. "
+            f"В базе «{database.name}» отсутствует "
+            f"основная коллекция "
+            f"«{primary_collection_name}»."
+        )
+
+    return primary_collection_name
 
 def get_company_collection(
     mode: str,
