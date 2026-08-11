@@ -10,20 +10,30 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
+import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / ".env")
+if getattr(sys, "frozen", False):
+    APP_DIR = Path(sys.executable).resolve().parent
+else:
+    APP_DIR = BASE_DIR # type: ignore
+
+load_dotenv(
+    APP_DIR / ".env",
+    override=False,
+)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
-DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
+DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "false"
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -49,6 +59,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -84,7 +96,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": APP_DIR / "db.sqlite3",
     }
 }
 
@@ -124,6 +136,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
@@ -148,19 +161,29 @@ RETAIL_MONGO_URI = os.getenv(
     "",
 )
 
-CASH_MONGO_URI = os.getenv(
-    "CASH_MONGO_URI",
-    "mongodb://127.0.0.1:27017/",
-)
-
 RETAIL_DB_PREFIX = os.getenv(
     "RETAIL_DB_PREFIX",
     "RetailServer",
 )
 
+CASH_MONGO_URI = os.getenv(
+    "CASH_MONGO_URI",
+    "mongodb://127.0.0.1:27017/",
+)
+
 CASH_DB_NAME = os.getenv(
     "CASH_DB_NAME",
     "CashServer",
+)
+
+RETAIL_PROXY_MONGO_URI = os.getenv(
+    "RETAIL_PROXY_MONGO_URI",
+    "mongodb://127.0.0.1:27017/",
+)
+
+RETAIL_PROXY_DB_NAME = os.getenv(
+    "RETAIL_PROXY_DB_NAME",
+    "RetailProxy",
 )
 
 MONGO_COLLECTION_SEPARATOR = os.getenv(

@@ -2,7 +2,8 @@ import logging
 import math
 import re
 
-
+from bson import ObjectId
+from bson.errors import InvalidId
 from django.shortcuts import redirect, render
 from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import PyMongoError
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 MODE_LABELS = {
     "retail": "RetailServer",
     "cash": "CashServer",
+    "proxy": "RetailProxy",
 }
 
 
@@ -109,6 +111,16 @@ TAX_LABELS = {
     2: "10%",
     3: "20%",
     4: "25%",
+}
+
+USER_ROLE_LABELS = {
+    1: "Администратор",
+    2: "Кассир",
+    3: "Администратор, кассир",
+    4: "Старший кассир",
+    5: "Администратор, старший кассир",
+    6: "Кассир, старший кассир",
+    7: "Администратор, кассир, старший кассир",
 }
 
 
@@ -198,17 +210,21 @@ def dashboard(request):
 
     if request.method == "POST":
         try:
-            clean_id = clean_company_id(
-                company_id
-            )
+            if selected_mode == "retail":
+                # Для RetailServer ID компании обязателен.
+                clean_id = clean_company_id(
+                    company_id
+                )
+            else:
+                # Для CashServer и RetailProxy
+                # ID компании не используется.
+                clean_id = "local"
 
             resolve_database_name(
                 selected_mode,
                 clean_id,
             )
 
-            # До перехода проверяем, что существует
-            # основная коллекция Goods.
             ensure_primary_collection_exists(
                 selected_mode,
                 clean_id,
@@ -222,7 +238,7 @@ def dashboard(request):
 
         except PyMongoError:
             logger.exception(
-                "Ошибка проверки компании в MongoDB."
+                "Ошибка проверки подключения в MongoDB."
             )
 
             error = (
@@ -275,15 +291,24 @@ def company_dashboard(
         mongo_available = True
 
         collection_descriptions = (
-            ("Goods", "Товары"),
-            ("User", "Пользователи"),
+            (
+                "Goods",
+                "Товары",
+                "companies:goods",
+            ),
+            (
+                "User",
+                "Пользователи",
+                "companies:users",
+            ),
             (
                 "CashDocuments",
                 "Кассовые документы",
+                "companies:cash_documents",
             ),
         )
 
-        for suffix, label in collection_descriptions:
+        for suffix, label, url_name in collection_descriptions:
             collection_name = get_collection_name(
                 company_id,
                 suffix,
@@ -294,6 +319,7 @@ def company_dashboard(
                 {
                     "label": label,
                     "name": collection_name,
+                    "url_name": url_name,
                     "exists": (
                         collection_name
                         in existing_collections
@@ -322,6 +348,36 @@ def company_dashboard(
             "mongo_error": mongo_error,
         },
     )
+
+def get_vat_label(vat_rate):
+    match vat_rate:
+        case -1:
+            return "Нет"
+        case 0:
+            return "0%"
+        case 0.05:
+            return "5%"
+        case 0.1:
+            return "10%"
+        case 0.2:
+            return "20%"
+        case 0.25:
+            return "25%"
+        case None:
+            return "—"
+        case _:
+            return vat_rate
+
+def get_mark_label(mark_type):
+    match mark_type:
+        case 1 | 2:
+            return "Да"
+        case 0:
+            return "Нет"
+        case None:
+            return "—"
+        case _:
+            return mark_type
 
 def goods_list(request, mode, company_id):
     access = get_connection_context(
@@ -409,6 +465,7 @@ def goods_list(request, mode, company_id):
             "Sale": 1,
             "Deleted": 1,
             "Manufacturer": 1,
+            "MarkType": 1,
         }
 
         goods = list(
@@ -420,6 +477,9 @@ def goods_list(request, mode, company_id):
             .skip(skip_count)
             .limit(page_size)
         )
+        for good in goods:
+            good["vat_label"] = get_vat_label(good.get("VATrate"))
+            good["mark_label"] = get_mark_label(good.get("MarkType"))
 
         mongo_error = None
 
@@ -456,6 +516,192 @@ def goods_list(request, mode, company_id):
         context,
     )
 
+
+def users_list(request, mode, company_id):
+    access = get_connection_context(
+        mode,
+        company_id,
+    )
+
+    search_query = request.GET.get(
+        "q",
+        "",
+    ).strip()
+
+    show_deleted = (
+        request.GET.get("show_deleted") == "1"
+    )
+
+    try:
+        page_number = int(
+            request.GET.get("page", "1")
+        )
+    except ValueError:
+        page_number = 1
+
+    page_number = max(
+        page_number,
+        1,
+    )
+
+    page_size = 50
+
+    mongo_filter = {}
+
+    if not show_deleted:
+        mongo_filter["Deleted"] = False
+
+    if search_query:
+        safe_query = re.escape(
+            search_query
+        )
+
+        mongo_filter["$or"] = [
+            {
+                "Name": {
+                    "$regex": safe_query,
+                    "$options": "i",
+                },
+            },
+            {
+                "Id": {
+                    "$regex": safe_query,
+                    "$options": "i",
+                },
+            },
+        ]
+
+    try:
+        collection = get_company_collection(
+            mode,
+            company_id,
+            "User",
+        )
+
+        total_count = collection.count_documents(
+            mongo_filter
+        )
+
+        page_count = max(
+            math.ceil(
+                total_count / page_size
+            ),
+            1,
+        )
+
+        page_number = min(
+            page_number,
+            page_count,
+        )
+
+        skip_count = (
+            page_number - 1
+        ) * page_size
+
+        projection = {
+            "_id": 1,
+            "Id": 1,
+            "Name": 1,
+            "RoleFlag": 1,
+            "Deleted": 1,
+        }
+
+        cursor = (
+            collection.find(
+                mongo_filter,
+                projection,
+            )
+            .sort("Name", ASCENDING)
+            .skip(skip_count)
+            .limit(page_size)
+        )
+
+        users = []
+        
+
+        for user in cursor:
+            role_flag = user.get("RoleFlag")
+            users.append(
+                {
+                    "mongo_id": str(
+                        user["_id"]
+                    ),
+                    "id": user.get(
+                        "Id",
+                        "—",
+                    ),
+                    "name": user.get(
+                        "Name",
+                        "—",
+                    ),
+                    "role_flag": role_flag,
+                    "role": USER_ROLE_LABELS.get(
+                        role_flag,
+                        (
+                            f"Неизвестная роль ({role_flag})"
+                            if role_flag is not None
+                            else "—"
+                        ),
+                    ),
+                    "deleted": (
+                        user.get("Deleted") is True
+                    ),
+                }
+            )
+
+        mongo_error = None
+
+    except PyMongoError:
+        logger.exception(
+            "Ошибка чтения пользователей."
+        )
+
+        users = []
+        total_count = 0
+        page_count = 1
+
+        mongo_error = (
+            "Не удалось получить "
+            "список пользователей."
+        )
+
+    pagination_params = request.GET.copy()
+    pagination_params.pop(
+        "page",
+        None,
+    )
+
+    context = {
+        "access": access,
+        "users": users,
+        "query": search_query,
+        "total_count": total_count,
+        "page_number": page_number,
+        "page_count": page_count,
+        "has_previous": (
+            page_number > 1
+        ),
+        "has_next": (
+            page_number < page_count
+        ),
+        "previous_page": (
+            page_number - 1
+        ),
+        "next_page": (
+            page_number + 1
+        ),
+        "pagination_query": (
+            pagination_params.urlencode()
+        ),
+        "mongo_error": mongo_error,
+        "show_deleted": show_deleted,
+    }
+
+    return render(
+        request,
+        "companies/users_list.html",
+        context,
+    )
 
 def cash_documents_list(request, mode, company_id):
     access = get_connection_context(
@@ -562,7 +808,7 @@ def cash_documents_list(request, mode, company_id):
         ) * page_size
 
         projection = {
-            "_id": 0,
+            "_id": 1,
             "Id": 1,
             "Author": 1,
             "CreatedAt": 1,
@@ -599,29 +845,27 @@ def cash_documents_list(request, mode, company_id):
 
             documents.append(
                 {
+                    "mongo_id": str(document["_id"]),
                     "id": document.get("Id", ""),
                     "number": document.get(
                         "Number",
                         "—",
                     ),
-                    "type_label": (
-                        get_document_type_label(
-                            document
-                        )
+                    "type_label": get_document_type_label(
+                        document
                     ),
                     "type": document.get(
                         "Type",
                         "",
                     ),
-                    "position": (
-                        format_document_datetime(
-                            document.get("Position")
-                        )
+                    "deleted": (
+                        document.get("Deleted") is True
                     ),
-                    "created_at": (
-                        format_document_datetime(
-                            document.get("CreatedAt")
-                        )
+                    "position": format_document_datetime(
+                        document.get("Position")
+                    ),
+                    "created_at": format_document_datetime(
+                        document.get("CreatedAt")
                     ),
                     "cashier": author.get(
                         "Name",
@@ -654,6 +898,8 @@ def cash_documents_list(request, mode, company_id):
                 }
             )
 
+
+
         mongo_error = None
 
     except PyMongoError:
@@ -670,6 +916,7 @@ def cash_documents_list(request, mode, company_id):
 
     pagination_params = request.GET.copy()
     pagination_params.pop("page", None)
+    return_query = request.GET.urlencode()
 
     context = {
         "access": access,
@@ -684,6 +931,7 @@ def cash_documents_list(request, mode, company_id):
         "pagination_query": (
             pagination_params.urlencode()
         ),
+        "return_query": return_query,
         "mongo_error": mongo_error,
 
         "date_from": date_from,
@@ -721,13 +969,18 @@ def cash_document_detail(
             "CashDocuments",
         )
 
-        document = collection.find_one(
-            {
+        try:
+            document_filter = {
+                "_id": ObjectId(document_id),
+            }
+
+        except (InvalidId, TypeError):
+            document_filter = {
                 "Id": document_id,
-            },
-            {
-                "_id": 0,
-            },
+            }
+
+        document = collection.find_one(
+            document_filter
         )
 
     except PyMongoError as error:
@@ -828,6 +1081,11 @@ def cash_document_detail(
             }
         )
 
+    return_query = request.GET.get(
+        "return_query",
+        "",
+    )
+
     context = {
         "access": access,
         "document": {
@@ -871,6 +1129,7 @@ def cash_document_detail(
         },
         "lines": prepared_lines,
         "payments": prepared_payments,
+        "return_query": return_query,
     }
 
     return render(

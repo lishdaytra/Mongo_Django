@@ -15,13 +15,17 @@ ALLOWED_COLLECTION_SUFFIXES = frozenset(
         "CashDocuments",
     }
 )
+
+
 class CompanyCollectionNotFoundError(LookupError):
     """Основная коллекция компании не найдена."""
+
 
 ALLOWED_MODES = frozenset(
     {
         "retail",
         "cash",
+        "proxy",
     }
 )
 
@@ -89,6 +93,9 @@ def resolve_database_name(
     if clean_mode == "cash":
         return settings.CASH_DB_NAME
 
+    if clean_mode == "proxy":
+        return settings.RETAIL_PROXY_DB_NAME
+
     first_character = clean_company_id_value[0]
 
     if first_character in "123456789":
@@ -106,6 +113,11 @@ def get_connection_uri(mode: str) -> str:
     if clean_mode == "cash":
         uri = settings.CASH_MONGO_URI
         variable_name = "CASH_MONGO_URI"
+
+    elif clean_mode == "proxy":
+        uri = settings.RETAIL_PROXY_MONGO_URI
+        variable_name = "RETAIL_PROXY_MONGO_URI"
+
     else:
         uri = settings.RETAIL_MONGO_URI
         variable_name = "RETAIL_MONGO_URI"
@@ -174,7 +186,7 @@ def get_collection_name(
 
     clean_mode = validate_mode(mode)
 
-    if clean_mode == "cash":
+    if clean_mode in {"cash", "proxy"}:
         return suffix
 
     clean_value = clean_company_id(company_id)

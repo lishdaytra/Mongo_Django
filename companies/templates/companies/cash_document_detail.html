@@ -7,7 +7,7 @@
 {% block content %}
 <a
     class="back-link"
-    href="{% url 'companies:cash_documents' access.mode access.company_id %}"
+    href="{% url 'companies:cash_documents' access.mode access.company_id %}{% if return_query %}?{{ return_query }}{% endif %}"
 >
     ← Назад к документам
 </a>

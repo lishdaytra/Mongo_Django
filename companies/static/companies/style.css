@@ -6,7 +6,7 @@ body {
     margin: 0;
     background: #f4f6f8;
     color: #20242a;
-    font-family: Arial, sans-serif;
+    font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
 }
 
 .container {
@@ -80,12 +80,34 @@ body {
 }
 
 .collection-name {
-    margin-top: 4px;
-    overflow-wrap: anywhere;
+    margin-top: 5px;
+
+    font-family: cursive, "Segoe UI", Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
+    display: block;
+    color: #7a7f87;
 }
 
-.collection-list {
-    margin-top: 20px;
+.collection-link {
+    font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.2px;
+
+    color: #202124;
+    text-decoration: none;
+
+    transition:
+        color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.collection-link:hover {
+    color: #b42318;
+    text-decoration: none;
 }
 
 .collection-row {
@@ -503,4 +525,18 @@ body {
     background: #fff3cd;
     border: 1px solid #ffe69c;
     color: #664d03;
+}
+
+.collection-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.collection-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
 }

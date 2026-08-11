@@ -43,7 +43,16 @@
                         selected
                     {% endif %}
                 >
-                    Локальный CashServer
+                    CashServer
+                </option>
+
+                <option
+                    value="proxy"
+                    {% if selected_mode == "proxy" %}
+                        selected
+                    {% endif %}
+                >
+                    RetailProxy
                 </option>
             </select>
         </div>
@@ -59,7 +68,6 @@
                 name="company_id"
                 value="{{ company_id }}"
                 placeholder="Например: vial_1"
-                required
                 autofocus
             >
         </div>
@@ -76,9 +84,39 @@
             ID с 1 по 9 в начале направляется
             в RetailServer1–RetailServer9.
             Остальные ID — в RetailServer.</br>
-            При подключении к CashServer -
-            любой ID
+            При подключении к CashServer/RetailProxy -
+            ID не требуется
         </p>
     </div>
 </section>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modeSelect = document.getElementById("mode");
+    const companyInput = document.getElementById("company_id");
+    const companyField = document.getElementById("company-id-field");
+
+    function updateCompanyField() {
+        const isRetail = modeSelect.value === "retail";
+
+        companyInput.required = isRetail;
+        companyInput.disabled = !isRetail;
+
+        if (isRetail) {
+            companyField.style.opacity = "1";
+            companyInput.placeholder = "Например: vial_1";
+        } else {
+            companyField.style.opacity = "0.45";
+            companyInput.value = "";
+            companyInput.placeholder = "Не требуется";
+        }
+    }
+
+    modeSelect.addEventListener(
+        "change",
+        updateCompanyField
+    );
+
+    updateCompanyField();
+});
+</script>
 {% endblock %}

@@ -22,6 +22,11 @@ urlpatterns = [
         name="goods",
     ),
     path(
+        "<str:mode>/<str:company_id>/users/",
+        views.users_list,
+        name="users",
+    ),
+    path(
         (
             "<str:mode>/<str:company_id>/"
             "cash-documents/"

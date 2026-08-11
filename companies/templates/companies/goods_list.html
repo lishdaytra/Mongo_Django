@@ -82,6 +82,7 @@
                     <th>Ед. изм.</th>
                     <th>НДС</th>
                     <th>Скидка</th>
+                    <th>Марк</th>
                 </tr>
             </thead>
 
@@ -123,7 +124,7 @@
                         </td>
 
                         <td>
-                            {{ good.VATrate|floatformat:2 }}
+                            {{ good.vat_label }}
                         </td>
 
                         <td>
@@ -135,6 +136,19 @@
                                 <span class="status status--missing">
                                     Нет
                                 </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if good.mark_label == "Да" %}
+                                <span class="status status--ok">
+                                    Да
+                                </span>
+                            {% elif good.mark_label == "Нет" %}
+                                <span class="status status--missing">
+                                    Нет
+                                </span>
+                            {% else %}
+                                {{ good.mark_label }}
                             {% endif %}
                         </td>
                     </tr>

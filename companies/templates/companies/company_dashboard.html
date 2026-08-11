@@ -46,44 +46,41 @@
     <article class="company-card">
         <div class="collection-list">
             {% for collection in collections %}
-                <div class="collection-row">
-                    <div>
+            <div class="collection-row">
+
+                <div class="collection-info">
+
+                    {% if collection.exists %}
+                        <a
+                            class="collection-link"
+                            href="{% url collection.url_name access.mode access.company_id %}"
+                        >
+                            {{ collection.label }}
+                        </a>
+                    {% else %}
                         <strong>
                             {{ collection.label }}
                         </strong>
+                    {% endif %}
 
-                        <div class="collection-name">
-                            {{ collection.name }}
-                        </div>
+                    <div class="collection-name">
+                        {{ collection.name }}
                     </div>
 
-                    {% if collection.exists %}
-                        <span class="status status--ok">
-                            Найдена
-                        </span>
-                    {% else %}
-                        <span class="status status--missing">
-                            Не найдена
-                        </span>
-                    {% endif %}
                 </div>
+
+                {% if collection.exists %}
+                    <span class="status status--ok">
+                        Найдена
+                    </span>
+                {% else %}
+                    <span class="status status--missing">
+                        Не найдена
+                    </span>
+                {% endif %}
+
+            </div>
             {% endfor %}
-        </div>
-
-        <div class="company-actions">
-            <a
-                class="button"
-                href="{% url 'companies:goods' access.mode access.company_id %}"
-            >
-                Товары
-            </a>
-
-            <a
-                class="button button--secondary"
-                href="{% url 'companies:cash_documents' access.mode access.company_id %}"
-            >
-                Кассовые документы
-            </a>
         </div>
     </article>
 {% endif %}

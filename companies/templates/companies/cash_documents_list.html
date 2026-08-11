@@ -9,7 +9,7 @@
     class="back-link"
     href="{% url 'companies:company_dashboard' access.mode access.company_id %}"
 >
-    ← Назад к компаниям
+    ← Назад к компании
 </a>
 
 <h1>
@@ -22,7 +22,7 @@
 </p>
 
 
-<form class="filters" method="get">
+<form id="cash-documents-filters" class="filters" method="get">
 
     
 
@@ -162,12 +162,13 @@
             type="checkbox"
             name="show_deleted"
             value="1"
+            form="cash-documents-filters"
             {% if show_deleted %}checked{% endif %}
         >
 
         <span>Показывать удалённые</span>
     </label>
-</div>    
+</div>   
 
 {% if mongo_error %}
     <div class="message message--error">
@@ -198,10 +199,10 @@
                         <td>{{ item.position }}</td>
 
                         <td>
-                            {% if item.id %}
+                            {% if item.mongo_id %}
                                 <a
                                     class="table-link"
-                                    href="{% url 'companies:cash_document_detail' access.mode access.company_id item.id %}"
+                                    href="{% url 'companies:cash_document_detail' access.mode access.company_id item.mongo_id %}{% if return_query %}?return_query={{ return_query|urlencode }}{% endif %}"
                                 >
                                     {{ item.number }}
                                 </a>

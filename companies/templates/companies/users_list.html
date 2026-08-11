@@ -1,0 +1,218 @@
+{% extends "companies/base.html" %}
+
+{% block title %}
+    Пользователи — {{ access.company_name }}
+{% endblock %}
+
+
+{% block content %}
+
+<a
+    class="back-link"
+    href="{% url 'companies:company_dashboard' access.mode access.company_id %}"
+>
+    ← Назад к компании
+</a>
+
+
+<h1>
+    Пользователи:
+    {{ access.company_name|default:access.company_id }}
+</h1>
+
+
+<p class="page-description">
+    Найдено пользователей: {{ total_count }}
+</p>
+
+
+<form
+    id="users-filters"
+    class="filters"
+    method="get"
+>
+
+    <div class="form-field">
+
+        <label for="q">
+            Поиск
+        </label>
+
+        <input
+            id="q"
+            type="text"
+            name="q"
+            value="{{ query }}"
+            placeholder="Имя или ID"
+        >
+
+    </div>
+
+
+    <div class="filters__buttons">
+
+        <button
+            class="button"
+            type="submit"
+        >
+            Найти
+        </button>
+
+        <a
+            class="button button--secondary"
+            href="{% url 'companies:users' access.mode access.company_id %}"
+        >
+            Сбросить
+        </a>
+
+    </div>
+
+</form>
+
+
+<div class="form-field form-field--checkbox">
+
+    <label class="checkbox-field">
+
+        <input
+            type="checkbox"
+            name="show_deleted"
+            value="1"
+            form="users-filters"
+            onchange="this.form.submit()"
+            {% if show_deleted %}checked{% endif %}
+        >
+
+        <span>
+            Показывать удалённых
+        </span>
+
+    </label>
+
+</div>
+
+
+{% if mongo_error %}
+
+    <div class="message message--error">
+        {{ mongo_error }}
+    </div>
+
+
+{% elif users %}
+
+    <div class="table-wrapper">
+
+        <table class="data-table">
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Имя</th>
+                    <th>Роль</th>
+                    <th>Состояние</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for user in users %}
+
+                    <tr>
+
+                        <td>
+                            {{ user.id }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ user.name }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ user.role }}
+                            </strong>
+                        </td>
+
+                        <td>
+
+                            {% if user.deleted %}
+
+                                <span class="status status--deleted">
+                                    Удалён
+                                </span>
+
+                            {% else %}
+
+                                <span class="status">
+                                    Активен
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <nav class="pagination">
+
+        <div>
+            Страница {{ page_number }}
+            из {{ page_count }}
+        </div>
+
+
+        <div class="pagination__buttons">
+
+            {% if has_previous %}
+
+                <a
+                    class="button button--secondary"
+                    href="?{{ pagination_query }}{% if pagination_query %}&{% endif %}page={{ previous_page }}"
+                >
+                    ← Предыдущая
+                </a>
+
+            {% endif %}
+
+
+            {% if has_next %}
+
+                <a
+                    class="button button--secondary"
+                    href="?{{ pagination_query }}{% if pagination_query %}&{% endif %}page={{ next_page }}"
+                >
+                    Следующая →
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </nav>
+
+
+{% else %}
+
+    <div class="message">
+        Пользователи не найдены.
+    </div>
+
+{% endif %}
+
+
+{% endblock %}
