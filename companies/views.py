@@ -131,7 +131,7 @@ def format_document_datetime(value):
     """
 
     if not value:
-        return "—"
+        return ""
 
     try:
         clean_value = str(value).replace("Z", "+00:00")
@@ -812,6 +812,7 @@ def cash_documents_list(request, mode, company_id):
             "Id": 1,
             "Author": 1,
             "CreatedAt": 1,
+            "ShiftOpenDate": 1,
             "Position": 1,
             "Number": 1,
             "Payments": 1,
@@ -823,6 +824,7 @@ def cash_documents_list(request, mode, company_id):
             "TotalSum": 1,
             "Type": 1,
             "Deleted": 1,
+            "AdvanceSum": 1,
         }
 
         cursor = (
@@ -1100,6 +1102,9 @@ def cash_document_detail(
             "created_at": format_document_datetime(
                 document.get("CreatedAt")
             ),
+            "shift_open_date": format_document_datetime(
+                document.get("ShiftOpenDate")
+            ),
             "position": format_document_datetime(
                 document.get("Position")
             ),
@@ -1124,6 +1129,9 @@ def cash_document_detail(
             ),
             "total_sum": float(
                 document.get("TotalSum", 0) or 0
+            ),
+            "advance_sum": float(
+                document.get("AdvanceSum", 0) or 0
             ),
             "deleted": document.get("Deleted") is True,
         },

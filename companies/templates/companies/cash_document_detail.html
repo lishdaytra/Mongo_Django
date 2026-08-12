@@ -39,10 +39,21 @@
 </div>
 
 <div class="document-summary">
+    {% if document.created_at %}
     <div>
         <span>Открыт</span>
         <strong>{{ document.created_at }}</strong>
     </div>
+    {% endif %}
+
+    {% if document.shift_open_date %}
+    <div>
+        <span>Смена открыта</span>
+        <strong>
+            {{ document.shift_open_date }}
+        </strong>
+    </div>
+    {% endif %}
 
     <div>
         <span>Закрыт</span>
@@ -66,6 +77,16 @@
             {{ document.currency }}
         </strong>
     </div>
+
+    {% if document.advance_sum %}
+    <div>
+        <span>Сумма авансов</span>
+        <strong>
+            {{ document.advance_sum|floatformat:2 }}
+            {{ document.currency }}
+        </strong>
+    </div>
+    {% endif %}
 
     <div>
         <span>Итого</span>
