@@ -1,6 +1,8 @@
 import logging
 import math
 import re
+import hashlib
+import hmac
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -721,6 +723,16 @@ def users_list(request, mode, company_id):
         context,
     )
 
+def check_maintenance_password(password):
+    entered_hash = hashlib.sha256(
+        password.encode("utf-8")
+    ).hexdigest()
+
+    return hmac.compare_digest(
+        entered_hash,
+        settings.TITAN_MAINTENANCE_PASSWORD_HASH,
+    )
+
 @require_POST
 def restore_admin_role(
     request,
@@ -823,10 +835,8 @@ def reset_user_password(
         "",
     )
 
-    if (
-        not settings.TITAN_MAINTENANCE_PASSWORD
-        or maintenance_password
-        != settings.TITAN_MAINTENANCE_PASSWORD
+    if not check_maintenance_password(
+        maintenance_password
     ):
         messages.error(
             request,
