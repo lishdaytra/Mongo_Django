@@ -13,7 +13,11 @@ import os
 import sys
 from pathlib import Path
 
-from dotenv import load_dotenv
+from .private_settings import (
+    ADMIN_DEFAULT_PASSWORD_HASH,
+    DJANGO_SECRET_KEY,
+    TITAN_MAINTENANCE_PASSWORD_HASH,
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,17 +27,18 @@ if getattr(sys, "frozen", False):
 else:
     APP_DIR = BASE_DIR # type: ignore
 
-load_dotenv(
-    APP_DIR / ".env",
-    override=False,
-)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
+SECRET_KEY = DJANGO_SECRET_KEY
 
-DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
+DEBUG = os.getenv(
+    "DJANGO_DEBUG",
+    "False"
+    if getattr(sys, "frozen", False)
+    else "True",
+).lower() == "true"
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -61,7 +66,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -143,12 +147,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MONGO_URI = os.getenv("MONGO_URI", "")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "")
-MONGO_COLLECTION_SEPARATOR = os.getenv(
-    "MONGO_COLLECTION_SEPARATOR",
-    "",
-)
+
 
 """
 LOGIN_URL = "login"
@@ -158,7 +157,7 @@ LOGOUT_REDIRECT_URL = "login"
 
 RETAIL_MONGO_URI = os.getenv(
     "RETAIL_MONGO_URI",
-    "",
+    "mongodb://127.0.0.1:27017/",
 )
 
 RETAIL_DB_PREFIX = os.getenv(
@@ -191,12 +190,3 @@ MONGO_COLLECTION_SEPARATOR = os.getenv(
     "",
 )
 
-TITAN_MAINTENANCE_PASSWORD = os.getenv(
-    "TITAN_MAINTENANCE_PASSWORD",
-    "",
-)
-
-ADMIN_DEFAULT_PASSWORD_HASH = os.getenv(
-    "ADMIN_DEFAULT_PASSWORD_HASH",
-    "",
-)
