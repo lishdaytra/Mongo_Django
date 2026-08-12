@@ -112,6 +112,7 @@
                     <th>Имя</th>
                     <th>Роль</th>
                     <th>Состояние</th>
+                    <th>Действия</th>
                 </tr>
 
             </thead>
@@ -155,6 +156,93 @@
 
                             {% endif %}
 
+                        </td>
+
+                        <td>
+                            <div class="user-actions">
+
+                                {% if user.is_admin %}
+                                    <form
+                                        method="post"
+                                        action="{% url 'companies:restore_admin_role' access.mode access.company_id user.mongo_id %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            class="button"
+                                            type="submit"
+                                        >
+                                            Восстановить роль
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+
+                                <button
+                                    class="button button--secondary"
+                                    type="button"
+                                    onclick="document.getElementById('reset-password-dialog-{{ user.mongo_id }}').showModal()"
+                                >
+                                    Сбросить пароль
+                                </button>
+
+                            </div>
+
+
+                            <dialog
+                                id="reset-password-dialog-{{ user.mongo_id }}"
+                                class="modal-dialog"
+                            >
+                                <form
+                                    method="post"
+                                    action="{% url 'companies:reset_user_password' access.mode access.company_id user.mongo_id %}"
+                                    class="modal-form"
+                                >
+                                    {% csrf_token %}
+
+                                    <h2>
+                                        Сброс пароля
+                                    </h2>
+
+                                    <p>
+                                        Пользователь:
+                                        <strong>{{ user.name }}</strong>
+                                    </p>
+
+                                    <p>
+                                        Для выполнения операции введите служебный пароль.
+                                    </p>
+
+                                    <div class="form-field">
+                                        <input
+                                            type="password"
+                                            name="maintenance_password"
+                                            placeholder="Служебный пароль"
+                                            required
+                                            autocomplete="off"
+                                        >
+                                    </div>
+
+                                    <div class="modal-actions">
+
+                                        <button
+                                            class="button button--secondary"
+                                            type="button"
+                                            onclick="this.closest('dialog').close()"
+                                        >
+                                            Отмена
+                                        </button>
+
+                                        <button
+                                            class="button"
+                                            type="submit"
+                                        >
+                                            Сбросить пароль
+                                        </button>
+
+                                    </div>
+                                </form>
+                            </dialog>
                         </td>
 
                     </tr>

@@ -5,6 +5,9 @@ import re
 from bson import ObjectId
 from bson.errors import InvalidId
 from django.shortcuts import redirect, render
+from django.conf import settings
+from django.contrib import messages
+from django.views.decorators.http import require_POST
 from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import PyMongoError
 from django.http import Http404
@@ -516,6 +519,18 @@ def goods_list(request, mode, company_id):
         context,
     )
 
+def increment_document_timestamp(value):
+    if isinstance(value, int):
+        return value + 1
+
+    if isinstance(value, str) and value.isdigit():
+        return str(
+            int(value) + 1
+        )
+
+    raise ValueError(
+        f"Неподдерживаемый Timestamp: {value!r}"
+    )
 
 def users_list(request, mode, company_id):
     access = get_connection_context(
@@ -630,6 +645,9 @@ def users_list(request, mode, company_id):
                         "Id",
                         "—",
                     ),
+                    "is_admin": (
+                        user.get("Id") == "admin"
+                    ),
                     "name": user.get(
                         "Name",
                         "—",
@@ -702,6 +720,213 @@ def users_list(request, mode, company_id):
         "companies/users_list.html",
         context,
     )
+
+@require_POST
+def restore_admin_role(
+    request,
+    mode,
+    company_id,
+    user_id,
+):
+
+    try:
+        collection = get_company_collection(
+            mode,
+            company_id,
+            "User",
+        )
+
+        try:
+            mongo_id = ObjectId(user_id)
+        except (InvalidId, TypeError):
+            raise Http404(
+                "Некорректный ID пользователя."
+            )
+
+        user = collection.find_one(
+            {
+                "_id": mongo_id,
+            },
+            {
+                "Id": 1,
+                "Timestamp": 1,
+            },
+        )
+
+        if user is None:
+            raise Http404(
+                "Пользователь не найден."
+            )
+
+        if user.get("Id") != "admin":
+            raise Http404(
+                "Операция разрешена только "
+                "для пользователя admin."
+            )
+
+        new_timestamp = increment_document_timestamp(
+            user.get("Timestamp")
+        )
+
+        collection.update_one(
+            {
+                "_id": mongo_id,
+            },
+            {
+                "$set": {
+                    "RoleFlag": 1,
+                    "Timestamp": new_timestamp,
+                }
+            },
+        )
+
+    except PyMongoError:
+        logger.exception(
+            "Ошибка восстановления роли администратора."
+        )
+
+        messages.error(
+            request,
+            "Не удалось восстановить роль администратора.",
+        )
+
+    except ValueError as error:
+        messages.error(
+            request,
+            str(error),
+        )
+
+    else:
+        messages.success(
+            request,
+            "Роль администратора восстановлена. "
+            "Timestamp обновлен.",
+        )
+
+    return redirect(
+        "companies:users",
+        mode=mode,
+        company_id=company_id,
+    )
+
+
+@require_POST
+def reset_user_password(
+    request,
+    mode,
+    company_id,
+    user_id,
+):
+
+    maintenance_password = request.POST.get(
+        "maintenance_password",
+        "",
+    )
+
+    if (
+        not settings.TITAN_MAINTENANCE_PASSWORD
+        or maintenance_password
+        != settings.TITAN_MAINTENANCE_PASSWORD
+    ):
+        messages.error(
+            request,
+            "Неверный служебный пароль.",
+        )
+
+        return redirect(
+            "companies:users",
+            mode=mode,
+            company_id=company_id,
+        )
+
+    if not settings.ADMIN_DEFAULT_PASSWORD_HASH:
+        messages.error(
+            request,
+            "Не задан эталонный пароль администратора.",
+        )
+
+        return redirect(
+            "companies:users",
+            mode=mode,
+            company_id=company_id,
+        )
+
+    try:
+        collection = get_company_collection(
+            mode,
+            company_id,
+            "User",
+        )
+
+        try:
+            mongo_id = ObjectId(user_id)
+        except (InvalidId, TypeError):
+            raise Http404(
+                "Некорректный ID пользователя."
+            )
+
+        user = collection.find_one(
+            {
+                "_id": mongo_id,
+            },
+            {
+                "Id": 1,
+                "Timestamp": 1,
+            },
+        )
+
+        if user is None:
+            raise Http404(
+                "Пользователь не найден."
+            )
+
+        new_timestamp = increment_document_timestamp(
+            user.get("Timestamp")
+        )
+
+        collection.update_one(
+            {
+                "_id": mongo_id,
+            },
+            {
+                "$set": {
+                    "Password": (
+                        settings.ADMIN_DEFAULT_PASSWORD_HASH
+                    ),
+                    "Timestamp": new_timestamp,
+                }
+            },
+        )
+
+    except PyMongoError:
+        logger.exception(
+            "Ошибка сброса пароля администратора."
+        )
+
+        messages.error(
+            request,
+            "Не удалось сбросить пароль администратора.",
+        )
+
+    except ValueError as error:
+        messages.error(
+            request,
+            str(error),
+        )
+
+    else:
+        messages.success(
+            request,
+            "Пароль администратора восстановлен. "
+            "Timestamp обновлён.",
+        )
+
+    return redirect(
+        "companies:users",
+        mode=mode,
+        company_id=company_id,
+    )
+
 
 def cash_documents_list(request, mode, company_id):
     access = get_connection_context(

@@ -27,6 +27,17 @@ urlpatterns = [
         name="users",
     ),
     path(
+    "<str:mode>/<str:company_id>/users/<str:user_id>/restore-admin/",
+    views.restore_admin_role,
+    name="restore_admin_role",
+    ),
+
+    path(
+        "<str:mode>/<str:company_id>/users/<str:user_id>/reset-password/",
+        views.reset_user_password,
+        name="reset_user_password",
+    ),
+    path(
         (
             "<str:mode>/<str:company_id>/"
             "cash-documents/"
