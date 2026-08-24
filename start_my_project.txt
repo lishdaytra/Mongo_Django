@@ -5,6 +5,24 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 
 
-Сборка
+## Сборка
 python manage.py collectstatic --noinput
 pyinstaller.exe --clean --noconfirm .\TitanWeb.spec
+
+## Компиляция установщика
+cd D:\Projects\titan_web
+
+.\.venv\Scripts\Activate.ps1
+
+python manage.py check
+
+python manage.py collectstatic --noinput
+
+Remove-Item .\build -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item .\dist -Recurse -Force -ErrorAction SilentlyContinue
+
+pyinstaller.exe --clean --noconfirm .\TitanWeb.spec
+
+.\dist\TitanWeb\TitanWeb.exe
+
+& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" .\TitanWebInstaller.iss

@@ -25,6 +25,10 @@ a = Analysis(
             r"staticfiles",
             r"staticfiles",
         ),
+        (
+            "assets/TW.png", 
+            "assets"
+        ),
     ],
     hiddenimports=hiddenimports,
     hookspath=[],
@@ -51,8 +55,10 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
+    icon="assets/TW.ico",
+    version="version_info.txt",
 )
 
 
